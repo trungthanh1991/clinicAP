@@ -28,7 +28,8 @@ export default {
             // Download file: GET /file/:key
             if (request.method === 'GET' && path.startsWith('/file/')) {
                 const key = decodeURIComponent(path.slice(6)); // Remove '/file/' prefix
-                return await handleDownload(key, env);
+                const inline = url.searchParams.get('inline') === 'true';
+                return await handleDownload(key, env, inline);
             }
 
             // Delete file: DELETE /file/:key
@@ -101,7 +102,7 @@ async function handleUpload(request: Request, env: Env): Promise<Response> {
     });
 }
 
-async function handleDownload(key: string, env: Env): Promise<Response> {
+async function handleDownload(key: string, env: Env, inline: boolean = false): Promise<Response> {
     const object = await env.THAMDINH_BUCKET.get(key);
 
     if (!object) {
@@ -117,7 +118,8 @@ async function handleDownload(key: string, env: Env): Promise<Response> {
 
     // Get original filename from custom metadata
     const originalName = object.customMetadata?.originalName || key;
-    headers.set('Content-Disposition', `attachment; filename="${originalName}"`);
+    const disposition = inline ? 'inline' : 'attachment';
+    headers.set('Content-Disposition', `${disposition}; filename="${originalName}"`);
 
     // Add CORS headers
     Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));

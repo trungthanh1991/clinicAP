@@ -174,20 +174,34 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
 
                             <div className="space-y-1">
                               {filteredAttachments.length > 0 ? (
-                                filteredAttachments.map((att) => (
-                                  <a
-                                    key={att.id}
-                                    href={att.url}
-                                    download={att.name}
-                                    className="flex items-center gap-2 text-xs p-1.5 bg-medical-50 rounded border border-medical-100 hover:bg-medical-100 transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <FileText size={12} className="text-medical-500 shrink-0" />
-                                    <span className="truncate text-gray-700">{att.name}</span>
-                                    <span className="text-gray-400 shrink-0">({(att.size / 1024).toFixed(1)} KB)</span>
-                                    <Download size={12} className="text-medical-500 shrink-0 ml-auto" />
-                                  </a>
-                                ))
+                                filteredAttachments.map((att) => {
+                                  const isPdf = att.type === 'application/pdf' || att.name.toLowerCase().endsWith('.pdf');
+                                  const isImage = att.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(att.name);
+                                  const canPreview = isPdf || isImage;
+
+                                  // Append ?inline=true if previewable to tell worker to serve inline
+                                  // Check if url already has params
+                                  const fileUrl = canPreview
+                                    ? `${att.url}${att.url.includes('?') ? '&' : '?'}inline=true`
+                                    : att.url;
+
+                                  return (
+                                    <a
+                                      key={att.id}
+                                      href={fileUrl}
+                                      download={canPreview ? undefined : att.name}
+                                      target={canPreview ? "_blank" : undefined}
+                                      rel={canPreview ? "noopener noreferrer" : undefined}
+                                      className="flex items-center gap-2 text-xs p-1.5 bg-medical-50 rounded border border-medical-100 hover:bg-medical-100 transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <FileText size={12} className="text-medical-500 shrink-0" />
+                                      <span className="truncate text-gray-700">{att.name}</span>
+                                      <span className="text-gray-400 shrink-0">({(att.size / 1024).toFixed(1)} KB)</span>
+                                      <Download size={12} className="text-medical-500 shrink-0 ml-auto" />
+                                    </a>
+                                  );
+                                })
                               ) : (
                                 <p className="text-xs text-gray-400 italic py-1">Không tìm thấy file nào.</p>
                               )}
