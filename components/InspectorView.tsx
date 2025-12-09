@@ -1,6 +1,7 @@
 import React from 'react';
 import { DossierItem, Category } from '../types';
-import { CheckCircle2, AlertCircle, FileText, ArrowLeft, Loader2, AlertTriangle, FolderOpen, Download, Search } from 'lucide-react';
+import { CheckCircle2, AlertCircle, FileText, ArrowLeft, Loader2, AlertTriangle, FolderOpen, Download, Search, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface InspectorViewProps {
   itemId: string; // This is now categoryId
@@ -35,7 +36,59 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
       </div>
     );
   }
+  const navigate = useNavigate();
 
+  if (categoryId === 'all_categories') {
+    return (
+      <div className="bg-gray-100 min-h-screen p-2 md:p-4">
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <div className="bg-medical-700 text-white px-4 py-3 flex items-center justify-between">
+              <h2 className="font-bold text-lg">Hồ sơ thẩm định</h2>
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{categories.length} danh mục</span>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {categories.length === 0 ? (
+                <div className="p-8 text-center text-gray-400">
+                  <FolderOpen size={48} className="mx-auto mb-2 opacity-30" />
+                  <p>Chưa có danh mục nào.</p>
+                </div>
+              ) : (
+                categories.map(cat => {
+                  const total = cat.items?.length || 0;
+                  const completed = cat.items?.filter(i => i.status === 'ready').length || 0;
+                  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+                  return (
+                    <div
+                      key={cat.id}
+                      onClick={() => navigate(`/inspect/${cat.id}`, { state: { fromAll: true } })}
+                      className="p-4 hover:bg-gray-50 transition-colors cursor-pointer active:bg-gray-100 group"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-gray-800 group-hover:text-medical-700 transition-colors">{cat.title}</h3>
+                        <ChevronRight size={18} className="text-gray-300 group-hover:text-medical-500" />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-green-500 h-full transition-all" style={{ width: `${progress}%` }} />
+                        </div>
+                        <span className="shrink-0">{progress}% ({completed}/{total})</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-gray-400">
+            Quét mã QR của từng danh mục để xem chi tiết cụ thể
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!foundCategory) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

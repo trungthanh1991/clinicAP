@@ -17,7 +17,9 @@ import {
     Edit2,
     Upload,
     X,
-    FileText
+    FileText,
+    Share2,
+    Download
 } from 'lucide-react';
 
 interface DossierManagerProps {
@@ -205,6 +207,64 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                             </div>
                         )
                     })}
+                </div>
+
+                {/* QR Code Preview for Active Category */}
+                {/* QR Code Preview for Active Category or Total */}
+                <div className="p-3 border-t border-gray-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] z-10">
+                    <div className="flex items-center gap-3">
+                        {/* Compact QR Preview */}
+                        <div
+                            className="bg-white p-1.5 border border-gray-200 rounded hover:border-medical-300 transition-colors cursor-pointer shrink-0"
+                            onClick={() => onGenerateQR(activeCategory ? activeCategory.id : 'all_categories')}
+                            title="Phóng to để quét"
+                        >
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}#/inspect/${activeCategory ? activeCategory.id : 'all_categories'}`)}&color=0284c7`}
+                                alt="QR Code"
+                                className="w-12 h-12 object-contain"
+                            />
+                        </div>
+
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                {activeCategory ? 'Mã QR Danh mục' : 'Mã QR Tổng hợp'}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => onGenerateQR(activeCategory ? activeCategory.id : 'all_categories')}
+                                    className="p-1 text-gray-500 hover:text-medical-600 bg-gray-100 hover:bg-medical-50 rounded transition-colors"
+                                    title="Phóng to / Chia sẻ"
+                                >
+                                    <Share2 size={14} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const id = activeCategory ? activeCategory.id : 'all_categories';
+                                        const title = activeCategory ? activeCategory.title : 'Tong-Hop';
+                                        const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}#/inspect/${id}`)}&color=0284c7`;
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = `QR-${title}.png`;
+                                        // Try to download, fallback to open
+                                        fetch(url).then(response => response.blob()).then(blob => {
+                                            const blobUrl = window.URL.createObjectURL(blob);
+                                            link.href = blobUrl;
+                                            link.click();
+                                            window.URL.revokeObjectURL(blobUrl);
+                                        }).catch(() => {
+                                            window.open(url, '_blank');
+                                        });
+                                    }}
+                                    className="flex-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-medical-50 hover:text-medical-700 rounded transition-colors flex items-center justify-center gap-1.5"
+                                    title="Tải ảnh QR xuống máy"
+                                >
+                                    <Download size={12} /> Tải về
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -497,6 +557,6 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };

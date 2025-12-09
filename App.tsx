@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { DossierManager } from './components/DossierManager';
 import { InspectorView } from './components/InspectorView';
 import { Category } from './types';
@@ -32,6 +32,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleGenerateQR = (categoryId: string) => {
+    if (categoryId === 'all_categories') {
+      setQrItem({ id: 'all_categories', title: "Toàn bộ danh mục" });
+      return;
+    }
     const category = categories.find(cat => cat.id === categoryId);
     const categoryTitle = category ? category.title : "";
     setQrItem({ id: categoryId, title: categoryTitle });
@@ -138,7 +142,19 @@ const AppContent: React.FC = () => {
 const InspectorRouteWrapper = ({ categories, isLoading }: { categories: Category[], isLoading: boolean }) => {
   const { itemId } = useParams();
   const navigate = useNavigate();
-  return <InspectorView itemId={itemId || ''} categories={categories} onBack={() => navigate('/')} isLoading={isLoading} />;
+  const location = useLocation();
+
+  const handleBack = () => {
+    // Check if we came from the all_categories view
+    // @ts-ignore - location.state is loosely typed
+    if (location.state?.fromAll) {
+      navigate('/inspect/all_categories');
+    } else {
+      navigate('/');
+    }
+  };
+
+  return <InspectorView itemId={itemId || ''} categories={categories} onBack={handleBack} isLoading={isLoading} />;
 }
 
 import { ErrorBoundary } from './components/ErrorBoundary';
