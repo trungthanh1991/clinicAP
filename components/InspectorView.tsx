@@ -26,6 +26,9 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
     }
   };
 
+  /* Hook moved up to respect Rules of Hooks */
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -36,7 +39,6 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
       </div>
     );
   }
-  const navigate = useNavigate();
 
   if (categoryId === 'all_categories') {
     return (
