@@ -1,0 +1,5 @@
+{
+  "name": "ClinicCheck - Hồ sơ Thẩm định Phòng khám",
+  "description": "Ứng dụng quản lý hồ sơ thẩm định phòng khám đa khoa, hỗ trợ tạo QR code cho từng hạng mục để đoàn kiểm tra dễ dàng truy xuất.",
+  "requestFramePermissions": []
+}
