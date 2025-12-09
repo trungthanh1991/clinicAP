@@ -6,13 +6,15 @@ interface InspectorViewProps {
   itemId: string; // This is now categoryId
   categories: Category[];
   onBack: () => void;
+  isLoading?: boolean;
 }
 
-export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId, categories, onBack }) => {
+export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId, categories, onBack, isLoading = false }) => {
   // Find the category by ID
   const foundCategory = categories.find(cat => cat.id === categoryId);
   const [expandedItemId, setExpandedItemId] = React.useState<string | null>(null);
   const [fileSearchTerm, setFileSearchTerm] = React.useState("");
+  const [itemSearchTerm, setItemSearchTerm] = React.useState("");
 
   const handleToggleExpand = (itemId: string) => {
     if (expandedItemId === itemId) {
@@ -22,6 +24,17 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
       setFileSearchTerm("");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-medical-600 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800">Đang tải dữ liệu...</h2>
+        </div>
+      </div>
+    );
+  }
 
   if (!foundCategory) {
     return (
@@ -41,13 +54,18 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
     );
   }
 
-  const totalItems = foundCategory.items.length;
+  const items = foundCategory.items || [];
+  const filteredItems = items.filter(item =>
+    item.title.toLowerCase().includes(itemSearchTerm.toLowerCase())
+  );
+
+  const totalItems = items.length;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const completedItems = foundCategory.items.filter(i => i.status === 'ready').length;
+  const completedItems = items.filter(i => i.status === 'ready').length;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const inProgressItems = foundCategory.items.filter(i => i.status === 'in_progress').length;
+  const inProgressItems = items.filter(i => i.status === 'in_progress').length;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const pendingItems = foundCategory.items.filter(i => i.status === 'pending').length;
+  const pendingItems = items.filter(i => i.status === 'pending').length;
 
   const getStatusBadge = (status: DossierItem['status']) => {
     switch (status) {
@@ -81,14 +99,29 @@ export const InspectorView: React.FC<InspectorViewProps> = ({ itemId: categoryId
             <h2 className="font-bold text-sm">{foundCategory.title} ({totalItems} mục)</h2>
           </div>
 
-          {foundCategory.items.length === 0 ? (
+          <div className="p-2 border-b border-gray-100 bg-gray-50">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm mục..."
+                value={itemSearchTerm}
+                onChange={(e) => setItemSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:border-medical-500 focus:ring-1 focus:ring-medical-500 outline-none"
+              />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+
+          {filteredItems.length === 0 ? (
             <div className="p-4 text-center text-gray-400">
               <FolderOpen size={32} className="mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Chưa có mục nào.</p>
+              <p className="text-sm">
+                {itemSearchTerm ? "Không tìm thấy mục nào phù hợp." : "Chưa có mục nào."}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {foundCategory.items.map((item, index) => {
+              {filteredItems.map((item, index) => {
                 const validAttachments = item.attachments?.filter(a => !a.name.startsWith('Đang tải:')) || [];
                 const fileCount = validAttachments.length;
                 const isExpanded = expandedItemId === item.id;

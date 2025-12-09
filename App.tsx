@@ -126,7 +126,7 @@ const AppContent: React.FC = () => {
             onGenerateQR={handleGenerateQR}
           />
         } />
-        <Route path="/inspect/:itemId" element={<InspectorRouteWrapper categories={categories} />} />
+        <Route path="/inspect/:itemId" element={<InspectorRouteWrapper categories={categories} isLoading={isLoading} />} />
       </Routes>
 
       {qrItem && <QRModal />}
@@ -135,17 +135,21 @@ const AppContent: React.FC = () => {
 };
 
 // Wrapper to handle params for inspector
-const InspectorRouteWrapper = ({ categories }: { categories: Category[] }) => {
+const InspectorRouteWrapper = ({ categories, isLoading }: { categories: Category[], isLoading: boolean }) => {
   const { itemId } = useParams();
   const navigate = useNavigate();
-  return <InspectorView itemId={itemId || ''} categories={categories} onBack={() => navigate('/')} />;
+  return <InspectorView itemId={itemId || ''} categories={categories} onBack={() => navigate('/')} isLoading={isLoading} />;
 }
+
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const App: React.FC = () => {
   return (
-    <HashRouter>
-      <AppContent />
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <AppContent />
+      </HashRouter>
+    </ErrorBoundary>
   );
 };
 

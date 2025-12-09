@@ -68,7 +68,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
         if (window.confirm("Bạn có chắc chắn muốn xóa mục này?")) {
             setCategories(prev => prev.map(cat => ({
                 ...cat,
-                items: cat.items.filter(item => item.id !== itemId)
+                items: (cat.items || []).filter(item => item.id !== itemId)
             })));
             if (editingItem?.id === itemId) setEditingItem(null);
         }
@@ -77,7 +77,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
     const handleUpdateItem = (updatedItem: DossierItem) => {
         setCategories(prev => prev.map(cat => ({
             ...cat,
-            items: cat.items.map(item => item.id === updatedItem.id ? updatedItem : item)
+            items: (cat.items || []).map(item => item.id === updatedItem.id ? updatedItem : item)
         })));
         setEditingItem(null);
     };
@@ -116,8 +116,9 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                         </div>
                     )}
                     {categories.map(cat => {
-                        const total = cat.items.length;
-                        const completed = cat.items.filter(i => i.status === 'ready').length;
+                        const items = cat.items || [];
+                        const total = items.length;
+                        const completed = items.filter(i => i.status === 'ready').length;
                         const progress = total === 0 ? 0 : (completed / total) * 100;
 
                         return (
@@ -433,12 +434,12 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-gray-50">
-                            {activeCategory.items.length === 0 && (
+                            {(!activeCategory.items || activeCategory.items.length === 0) && (
                                 <div className="text-center py-10 text-gray-400">
                                     <p>Chưa có mục nào trong danh mục này.</p>
                                 </div>
                             )}
-                            {activeCategory.items.map((item) => (
+                            {(activeCategory.items || []).map((item) => (
                                 <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex-1" onClick={() => setEditingItem(item)}>
                                         <div className="flex items-center gap-2 mb-1">
@@ -480,7 +481,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                                     };
                                     const updatedCategory = {
                                         ...activeCategory,
-                                        items: [...activeCategory.items, newItem]
+                                        items: [...(activeCategory.items || []), newItem]
                                     };
                                     setCategories(prev => prev.map(c => c.id === activeCategory.id ? updatedCategory : c));
                                     setEditingItem(newItem);
