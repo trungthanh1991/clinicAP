@@ -19,7 +19,8 @@ import {
     X,
     FileText,
     Share2,
-    Download
+    Download,
+    Search
 } from 'lucide-react';
 
 interface DossierManagerProps {
@@ -37,6 +38,19 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
     // States for category management
     const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
     const [tempCategoryTitle, setTempCategoryTitle] = useState("");
+    const [categorySearchTerm, setCategorySearchTerm] = useState("");
+    const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+
+    const checkAdminPermission = () => {
+        if (isAdminUnlocked) return true;
+        const password = prompt("Nhập mật khẩu xác thực quyền Admin (lần đầu):");
+        if (password === '545454') {
+            setIsAdminUnlocked(true);
+            return true;
+        }
+        if (password !== null) alert("Mật khẩu sai! Không có quyền thao tác.");
+        return false;
+    };
 
     const handleAddCategory = () => {
         const newCat: Category = {
@@ -59,6 +73,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
 
     const handleDeleteCategory = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!checkAdminPermission()) return;
         if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này và tất cả hồ sơ bên trong?")) {
             setCategories(prev => prev.filter(c => c.id !== id));
             if (selectedCategory === id) setSelectedCategory(null);
@@ -67,6 +82,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
 
     const handleDeleteItem = (itemId: string, e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!checkAdminPermission()) return;
         if (window.confirm("Bạn có chắc chắn muốn xóa mục này?")) {
             setCategories(prev => prev.map(cat => ({
                 ...cat,
@@ -77,6 +93,7 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
     };
 
     const handleUpdateItem = (updatedItem: DossierItem) => {
+        if (!checkAdminPermission()) return;
         setCategories(prev => prev.map(cat => ({
             ...cat,
             items: (cat.items || []).map(item => item.id === updatedItem.id ? updatedItem : item)
@@ -94,6 +111,11 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
 
     const activeCategory = categories.find(c => c.id === selectedCategory);
 
+    // Filter categories based on search term
+    const filteredCategories = categories.filter(cat =>
+        cat.title.toLowerCase().includes(categorySearchTerm.toLowerCase())
+    );
+
     return (
         <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
             {/* Sidebar - Category List */}
@@ -106,18 +128,36 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                         className="text-xs bg-medical-600 text-white px-2 py-1 rounded flex items-center gap-1 hover:bg-medical-700 transition-colors shadow-sm"
                     >
                         <Plus className="w-3 h-3" />
-                        Thêm danh mục
+                        Thêm
                     </button>
                 </div>
 
+                {/* Search Box */}
+                <div className="p-2 border-b border-gray-100 bg-white">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Tìm danh mục..."
+                            value={categorySearchTerm}
+                            onChange={e => setCategorySearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-md bg-gray-50 focus:bg-white focus:border-medical-300 outline-none transition-colors"
+                        />
+                    </div>
+                </div>
+
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                    {categories.length === 0 && (
+                    {filteredCategories.length === 0 && (
                         <div className="p-8 text-center text-gray-400 text-sm flex flex-col items-center">
                             <FolderOpen size={32} className="mb-2 opacity-20" />
-                            Chưa có danh mục nào.<br />Hãy nhấn "Thêm danh mục".
+                            {categories.length === 0 ? (
+                                <>Chưa có danh mục nào.<br />Hãy nhấn "Thêm".</>
+                            ) : (
+                                <>Không tìm thấy danh mục phù hợp.</>
+                            )}
                         </div>
                     )}
-                    {categories.map(cat => {
+                    {filteredCategories.map(cat => {
                         const items = cat.items || [];
                         const total = items.length;
                         const completed = items.filter(i => i.status === 'ready').length;
@@ -175,8 +215,10 @@ export const DossierManager: React.FC<DossierManagerProps> = ({ categories, setC
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setEditingCategoryId(cat.id);
-                                                    setTempCategoryTitle(cat.title);
+                                                    if (checkAdminPermission()) {
+                                                        setEditingCategoryId(cat.id);
+                                                        setTempCategoryTitle(cat.title);
+                                                    }
                                                 }}
                                                 className="p-1.5 text-gray-400 hover:text-medical-600 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-full hover:bg-medical-50"
                                                 title="Đổi tên"

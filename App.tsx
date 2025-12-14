@@ -117,7 +117,7 @@ const AppContent: React.FC = () => {
             </span>
           )}
           <div className="text-sm text-gray-500 hidden md:block pl-3 border-l">
-            Hệ thống thẩm định phòng khám 4.0
+            Hệ thống hồ sơ báo cáo 4.0
           </div>
         </div>
       </header>
